@@ -2,8 +2,8 @@ package ru.gil.securitydemo.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -13,14 +13,15 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 import static org.springframework.http.HttpMethod.*;
-import static org.springframework.security.config.Customizer.withDefaults;
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+import static ru.gil.securitydemo.model.Permission.DEVELOPERS_READ;
+import static ru.gil.securitydemo.model.Permission.DEVELOPERS_WRITE;
 import static ru.gil.securitydemo.model.Role.ADMIN;
 import static ru.gil.securitydemo.model.Role.USER;
 
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfiguration {
 
     @Bean
@@ -29,10 +30,10 @@ public class SecurityConfiguration {
                 .csrf().disable()
                 .authorizeHttpRequests((request) ->
                         request
+//                                .requestMatchers(GET, "/api/**").hasAuthority(DEVELOPERS_READ.getPermission())
+//                                .requestMatchers(POST, "/api/**").hasAuthority(DEVELOPERS_WRITE.getPermission())
+//                                .requestMatchers(DELETE, "/api/**").hasAuthority(DEVELOPERS_WRITE.getPermission())
                                 .requestMatchers("/*").permitAll()
-                                .requestMatchers(GET, "/api/**").hasAnyRole(ADMIN.name(), USER.name())
-                                .requestMatchers(POST, "/api/**").hasRole(ADMIN.name())
-                                .requestMatchers(DELETE, "/api/**").hasRole(ADMIN.name())
                                 .anyRequest()
                                 .authenticated())
                 .httpBasic();
@@ -45,12 +46,12 @@ public class SecurityConfiguration {
                 User.builder()
                         .username("admin")
                         .password(passwordEncoder().encode("admin"))
-                        .roles(ADMIN.name())
+                        .authorities(ADMIN.getAuthorities())
                         .build(),
                 User.builder()
                         .username("user")
                         .password(passwordEncoder().encode("user"))
-                        .roles(USER.name())
+                        .authorities(USER.getAuthorities())
                         .build()
         );
     }
